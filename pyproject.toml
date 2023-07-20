@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "rssi-prediction"
+version = "0.1.0"
+description = "Predict RSSI values at different locations for rooms of different shapes using machine learning"
+authors = ["Harikeshav R <r.harikeshav@gmail.com>"]
+license = "GNU General Public License v3.0"
+readme = "README.md"
+packages = [{include = "rssi_prediction"}]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.12"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
