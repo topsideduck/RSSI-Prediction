@@ -123,6 +123,6 @@ if __name__ == "__main__":
         os.makedirs("data")
 
     # Save the dataset to a CSV file
-    dataset.to_csv("data/rssi_dataset_rectangular.csv", index=False)
+    dataset.to_csv("data/rssi_dataset_rectangle.csv", index=False)
 
-    print("Dataset saved to 'data/rssi_dataset.csv'.")
+    print("Dataset saved to 'data/rssi_dataset_rectangle.csv'.")
