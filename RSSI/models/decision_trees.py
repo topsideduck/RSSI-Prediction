@@ -1,54 +1,150 @@
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
 
-# Load the generated dataset
-dataset = pd.read_csv("data/rssi_dataset_rectangle.csv")
 
-# Separate features (x, y coordinates) and target (RSSI values)
-X = dataset[["x", "y"]].values
-y = dataset["rssi"].values
+class DecisionTreeModel:
+    def load_dataset(self, file_path: str) -> pd.DataFrame:
+        """Load the dataset from the given CSV file.
 
-# Split the dataset into training and testing sets (80% training, 20% testing)
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42
-)
+        Parameters:
+            file_path (str): Path to the CSV file.
 
-# Find the optimal value for max_depth using cross-validation
-best_accuracy = 0.0
-best_max_depth = 1
+        Returns:
+            pd.DataFrame: The loaded dataset.
+        """
+        return pd.read_csv(file_path)
 
-for depth in range(1, 21):
-    dt_model = DecisionTreeRegressor(max_depth=depth, random_state=42)
-    dt_model.fit(X_train, y_train)
-    y_pred = dt_model.predict(X_test)
-    accuracy = r2_score(y_test, y_pred)
+    def preprocess_dataset(
+        self, dataset: pd.DataFrame
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Preprocess the dataset, separating features (x, y coordinates) and target (RSSI values).
 
-    if accuracy > best_accuracy:
-        best_accuracy = accuracy
-        best_max_depth = depth
+        Parameters:
+            dataset (pd.DataFrame): The input dataset.
 
-# Train the Decision Trees model using the best value of max_depth
-dt_model = DecisionTreeRegressor(max_depth=best_max_depth, random_state=42)
-dt_model.fit(X_train, y_train)
+        Returns:
+            Tuple[np.ndarray, np.ndarray]: Tuple containing features (X) and target (y).
+        """
+        X = dataset[["x", "y"]].values
+        y = dataset["rssi"].values
+        return X, y
 
-# Make predictions on the test set
-y_pred_test = dt_model.predict(X_test)
+    def find_best_max_depth(
+        self,
+        X_train: np.ndarray,
+        y_train: np.ndarray,
+        X_test: np.ndarray,
+        y_test: np.ndarray,
+    ) -> int:
+        """Find the optimal value for max_depth using cross-validation.
 
-# Calculate the R-squared (accuracy) of the model
-accuracy = r2_score(y_test, y_pred_test)
+        Parameters:
+            X_train (np.ndarray): Features of the training set.
+            y_train (np.ndarray): Target values of the training set.
+            X_test (np.ndarray): Features of the testing set.
+            y_test (np.ndarray): Target values of the testing set.
 
-print("Best max_depth:", best_max_depth)
-print("R-squared (Accuracy):", accuracy)
+        Returns:
+            int: The optimal value of max_depth.
+        """
+        best_accuracy = 0.0
+        best_max_depth = 1
 
-# Create a scatter plot to compare predicted vs. actual RSSI values
-plt.figure(figsize=(8, 6))
-plt.scatter(y_test, y_pred_test, s=50, alpha=0.7)
-plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], "--", color="gray")
-plt.xlabel("Actual RSSI")
-plt.ylabel("Predicted RSSI")
-plt.title("Predicted vs. Actual RSSI")
-plt.grid(True)
-plt.show()
+        # Iterate through different values of max_depth and find the one with the highest accuracy
+        for depth in range(1, 21):
+            dt_model = DecisionTreeRegressor(max_depth=depth, random_state=42)
+            dt_model.fit(X_train, y_train)
+            y_pred = dt_model.predict(X_test)
+            accuracy = r2_score(y_test, y_pred)
+
+            if accuracy > best_accuracy:
+                best_accuracy = accuracy
+                best_max_depth = depth
+
+        return best_max_depth
+
+    def train_model(
+        self, X_train: np.ndarray, y_train: np.ndarray, best_max_depth: int
+    ) -> DecisionTreeRegressor:
+        """Train the Decision Trees model using the best value of max_depth.
+
+        Parameters:
+            X_train (np.ndarray): Features of the training set.
+            y_train (np.ndarray): Target values of the training set.
+            best_max_depth (int): The optimal value of max_depth.
+
+        Returns:
+            DecisionTreeRegressor: Trained Decision Trees model.
+        """
+        dt_model = DecisionTreeRegressor(max_depth=best_max_depth, random_state=42)
+        dt_model.fit(X_train, y_train)
+        return dt_model
+
+    def evaluate_model(
+        self, model: DecisionTreeRegressor, X_test: np.ndarray, y_test: np.ndarray
+    ) -> float:
+        """Evaluate the model using the test set and calculate the R-squared (accuracy).
+
+        Parameters:
+            model (DecisionTreeRegressor): Trained Decision Trees model.
+            X_test (np.ndarray): Features of the testing set.
+            y_test (np.ndarray): Target values of the testing set.
+
+        Returns:
+            float: R-squared (accuracy) of the model.
+        """
+        y_pred_test = model.predict(X_test)
+        accuracy = r2_score(y_test, y_pred_test)
+        return accuracy
+
+    def plot_predictions(self, y_test: np.ndarray, y_pred_test: np.ndarray) -> None:
+        """Create a scatter plot to compare predicted vs. actual RSSI values.
+
+        Parameters:
+            y_test (np.ndarray): Target values of the testing set.
+            y_pred_test (np.ndarray): Predicted values on the testing set.
+        """
+        plt.figure(figsize=(8, 6))
+        plt.scatter(y_test, y_pred_test, s=50, alpha=0.7)
+        plt.plot(
+            [min(y_test), max(y_test)], [min(y_test), max(y_test)], "--", color="gray"
+        )
+        plt.xlabel("Actual RSSI")
+        plt.ylabel("Predicted RSSI")
+        plt.title("Predicted vs. Actual RSSI")
+        plt.grid(True)
+        plt.show()
+
+
+if __name__ == "__main__":
+    # Create the DecisionTreeModel object
+    decision_tree_model = DecisionTreeModel()
+
+    # Load the dataset
+    dataset = decision_tree_model.load_dataset("data/rssi_dataset_rectangle.csv")
+
+    # Preprocess the dataset
+    X, y = decision_tree_model.preprocess_dataset(dataset)
+
+    # Split the dataset into training and testing sets (80% training, 20% testing)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+
+    # Find the best value for max_depth using cross-validation
+    best_max_depth = decision_tree_model.find_best_max_depth(X_train, y_train, X_test, y_test)
+
+    # Train the Decision Trees model using the best value of max_depth
+    trained_model = decision_tree_model.train_model(X_train, y_train, best_max_depth)
+
+    # Evaluate the model
+    accuracy = decision_tree_model.evaluate_model(trained_model, X_test, y_test)
+    print("Best max_depth:", best_max_depth)
+    print("R-squared (Accuracy):", accuracy)
+
+    # Plot the predictions
+    decision_tree_model.plot_predictions(y_test, trained_model.predict(X_test))
