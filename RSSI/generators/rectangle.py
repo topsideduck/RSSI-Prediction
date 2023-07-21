@@ -10,7 +10,7 @@ PATH_LOSS_EXPONENT = 2.5  # n in the empirical formula
 
 # Room details
 ROOM_SIZE = (6, 4)  # (width, height) of the rectangular room
-RESOLUTION = 0.5  # Grid resolution for data generation
+RESOLUTION = 0.1  # Grid resolution for data generation
 
 # Number of random samples
 NUM_SAMPLES = 1000

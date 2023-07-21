@@ -11,7 +11,7 @@ PATH_LOSS_EXPONENT = 2.5  # n in the empirical formula
 # Room details
 TRIANGLE_HEIGHT = 4.0  # Height of the triangular room
 TRIANGLE_BASE = 6.0  # Base of the triangular room
-RESOLUTION = 0.5  # Grid resolution for data generation
+RESOLUTION = 0.1  # Grid resolution for data generation
 
 # Number of random samples
 NUM_SAMPLES = 1000
