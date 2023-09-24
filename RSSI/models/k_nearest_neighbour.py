@@ -1,7 +1,8 @@
+import time
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn.metrics import r2_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.preprocessing import MinMaxScaler
@@ -91,7 +92,7 @@ class KNearestNeighbourModel:
 
     def evaluate_model(
         self, model: KNeighborsRegressor, X_test: np.ndarray, y_test: np.ndarray
-    ) -> float:
+    ) -> dict[str, float]:
         """Evaluate the model using the test set and calculate the R-squared (accuracy).
 
         Parameters:
@@ -103,8 +104,22 @@ class KNearestNeighbourModel:
             float: R-squared (accuracy) of the model.
         """
         y_pred_test = model.predict(X_test)
-        accuracy = r2_score(y_test, y_pred_test)
-        return accuracy
+
+        # Calculate evaluation metrics
+        mae = mean_absolute_error(y_test, y_pred_test)
+        mse = mean_squared_error(y_test, y_pred_test)
+        rmse = np.sqrt(mse)
+        r2 = r2_score(y_test, y_pred_test)
+
+        # Create a dictionary to store the results
+        evaluation_results = {
+            "MAE": mae,
+            "MSE": mse,
+            "RMSE": rmse,
+            "R2 Score": r2
+        }
+
+        return evaluation_results
 
     def plot_predictions(self, y_test: np.ndarray, y_pred_test: np.ndarray) -> None:
         """Create a scatter plot to compare predicted vs. actual RSSI values.
@@ -124,7 +139,7 @@ class KNearestNeighbourModel:
         )
         plt.xlabel("Actual RSSI")
         plt.ylabel("Predicted RSSI")
-        plt.title("Predicted vs. Actual RSSI")
+        plt.title("K Nearest Neighbour: Predicted vs. Actual RSSI")
         plt.grid(True)
         plt.show()
 
@@ -146,12 +161,21 @@ if __name__ == "__main__":
     best_k = k_nearest_neighbour_model.find_best_k(X_train, y_train, X_test, y_test)
 
     # Train the KNN model using the best value of k
+    begin_time = time.time()
     trained_model = k_nearest_neighbour_model.train_model(X_train, y_train, best_k)
+    end_time = time.time()
+
+    # Evaluate the model and get evaluation metrics
+    evaluation_metrics = k_nearest_neighbour_model.evaluate_model(trained_model, X_test, y_test)
 
     # Evaluate the model
     accuracy = k_nearest_neighbour_model.evaluate_model(trained_model, X_test, y_test)
+
     print("Best k:", best_k)
-    print("R-squared (Accuracy):", accuracy)
+    for metric, value in evaluation_metrics.items():
+        print(f"{metric}: {value}")
+
+    print(f"Time to train: {end_time - begin_time} seconds.")
 
     # Plot the predictions
     k_nearest_neighbour_model.plot_predictions(y_test, trained_model.predict(X_test))

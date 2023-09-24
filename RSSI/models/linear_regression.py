@@ -1,8 +1,9 @@
+import time
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import r2_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 
 
@@ -49,7 +50,7 @@ class LinearRegressionModel:
 
     def evaluate_model(
         self, model: LinearRegression, X_test: np.ndarray, y_test: np.ndarray
-    ) -> float:
+    ) -> dict[str, float]:
         """Evaluate the linear regression model on the test set and calculate the R-squared (accuracy) of the model.
 
         Parameters:
@@ -61,8 +62,22 @@ class LinearRegressionModel:
             float: R-squared (accuracy) of the model.
         """
         y_pred_test = model.predict(X_test)
-        accuracy = r2_score(y_test, y_pred_test)
-        return accuracy
+
+        # Calculate evaluation metrics
+        mae = mean_absolute_error(y_test, y_pred_test)
+        mse = mean_squared_error(y_test, y_pred_test)
+        rmse = np.sqrt(mse)
+        r2 = r2_score(y_test, y_pred_test)
+
+        # Create a dictionary to store the results
+        evaluation_results = {
+            "MAE": mae,
+            "MSE": mse,
+            "RMSE": rmse,
+            "R2 Score": r2
+        }
+
+        return evaluation_results
 
     def plot_predictions(self, y_test: np.ndarray, y_pred_test: np.ndarray) -> None:
         """Create a scatter plot to compare predicted vs. actual RSSI values.
@@ -81,7 +96,7 @@ class LinearRegressionModel:
         )
         plt.xlabel("Actual RSSI")
         plt.ylabel("Predicted RSSI")
-        plt.title("Predicted vs. Actual RSSI")
+        plt.title("Linear Regression: Predicted vs. Actual RSSI")
         plt.grid(True)
         plt.show()
 
@@ -100,11 +115,18 @@ if __name__ == "__main__":
     )
 
     # Train a linear regression model
+    begin_time = time.time()
     trained_model = linear_regression_model.train_model(X_train, y_train)
+    end_time = time.time()
 
-    # Evaluate the model
-    accuracy = linear_regression_model.evaluate_model(trained_model, X_test, y_test)
-    print("R-squared (Accuracy):", accuracy)
+    # Evaluate the model and get evaluation metrics
+    evaluation_metrics = linear_regression_model.evaluate_model(trained_model, X_test, y_test)
+
+    # Display evaluation metrics
+    for metric, value in evaluation_metrics.items():
+        print(f"{metric}: {value}")
+
+    print(f"Time to train: {end_time - begin_time} seconds.")
 
     # Plot the predictions
     linear_regression_model.plot_predictions(y_test, trained_model.predict(X_test))

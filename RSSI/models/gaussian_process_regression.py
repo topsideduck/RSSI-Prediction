@@ -1,3 +1,4 @@
+import time
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -5,7 +6,7 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF
 from sklearn.gaussian_process.kernels import ConstantKernel as C
 from sklearn.gaussian_process.kernels import WhiteKernel
-from sklearn.metrics import r2_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 
@@ -65,7 +66,7 @@ class GaussianProcessRegressorModel:
 
     def evaluate_model(
         self, model: GaussianProcessRegressor, X_test: np.ndarray, y_test: np.ndarray
-    ) -> float:
+    ) -> dict[str, float]:
         """Evaluate the GPR model on the test set and calculate the R-squared (accuracy) of the model.
 
         Parameters:
@@ -76,9 +77,23 @@ class GaussianProcessRegressorModel:
         Returns:
             float: R-squared (accuracy) of the model.
         """
-        y_pred_test, _ = model.predict(X_test, return_std=True)
-        accuracy = r2_score(y_test, y_pred_test)
-        return accuracy
+        y_pred_test = model.predict(X_test)
+
+        # Calculate evaluation metrics
+        mae = mean_absolute_error(y_test, y_pred_test)
+        mse = mean_squared_error(y_test, y_pred_test)
+        rmse = np.sqrt(mse)
+        r2 = r2_score(y_test, y_pred_test)
+
+        # Create a dictionary to store the results
+        evaluation_results = {
+            "MAE": mae,
+            "MSE": mse,
+            "RMSE": rmse,
+            "R2 Score": r2
+        }
+
+        return evaluation_results
 
     def plot_predictions(self, y_test: np.ndarray, y_pred_test: np.ndarray) -> None:
         """Create a scatter plot to compare predicted vs. actual RSSI values.
@@ -97,7 +112,7 @@ class GaussianProcessRegressorModel:
         )
         plt.xlabel("Actual RSSI")
         plt.ylabel("Predicted RSSI")
-        plt.title("Predicted vs. Actual RSSI")
+        plt.title("Gaussian Process Regression: Predicted vs. Actual RSSI")
         plt.grid(True)
         plt.show()
 
@@ -118,15 +133,19 @@ if __name__ == "__main__":
     )
 
     # Create and train the GPR model
+    begin_time = time.time()
     trained_model = gaussian_process_regressor_model.train_model(
         X_train, y_train
     )
+    end_time = time.time()
 
     # Evaluate the model
-    accuracy = gaussian_process_regressor_model.evaluate_model(
-        trained_model, X_test, y_test
-    )
-    print("R-squared (Accuracy):", accuracy)
+    evaluation_metrics = gaussian_process_regressor_model.evaluate_model(trained_model, X_test, y_test)
+
+    for metric, value in evaluation_metrics.items():
+        print(f"{metric}: {value}")
+
+    print(f"Time to train: {end_time - begin_time} seconds.")
 
     # Plot the predictions
     gaussian_process_regressor_model.plot_predictions(
